@@ -1,0 +1,198 @@
+<% layout('layouts/boilerplate') %>
+    <div class="container mt-5">
+        <div class="row">
+            <!-- Button to add a new column -->
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createColumnModal">
+                            Add Column
+                        </button>
+                    </div>
+                    <div class="row">
+                        <% columns.sort((a, b)=> a.id - b.id).forEach(column => { %>
+                            <div class="col">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h2 class="card-title">
+                                            <%= column.name %>
+                                                <!-- Button to delete the column -->
+                                                <form class="d-inline" action="/index/<%= column.id %>?_method=DELETE"
+                                                    method="POST">
+                                                    <button type="submit" class="btn btn-sm btn-danger"
+                                                        <%=tasks.filter(task=>
+                                                        task.ColumnId === column.id).length > 0 ? 'disabled' : '' %>>
+                                                        Delete
+                                                    </button>
+                                                </form>
+                                        </h2>
+                                    </div>
+                                    <div class="card-body" ondrop="handleDrop(event)" ondragover="handleDragOver(event)"
+                                        data-column-id="<%= column.id %>">
+                                        <% tasks.filter(task=> task.ColumnId === column.id).forEach(task => { %>
+                                            <div class="card mb-3" draggable="true"
+                                                ondragstart="handleTaskDragStart(event)" data-task-id="<%= task.id %>">
+                                                <div class="card-body">
+                                                    <h3 class="card-title">
+                                                        <%= task.name %>
+                                                    </h3>
+                                                    <p class="card-text">
+                                                        <%= task.description %>
+                                                    </p>
+                                                    <p class="card-text">Status: <%= task.status %>
+                                                    </p>
+                                                    <p class="card-text">Date: <%= task.date instanceof Date ?
+                                                            task.date.toDateString() : task.date %>
+                                                    </p>
+                                                    <!-- Button to delete the task -->
+                                                    <form action="/delete/<%= task.id %>?_method=DELETE" method="POST">
+                                                        <button type="submit" class="btn btn-danger">Delete
+                                                            Task</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                            <% }) %>
+                                                <!-- Button to add a new task -->
+                                                <button class="btn btn-primary" data-bs-toggle="modal"
+                                                    data-bs-target="#createTaskModal<%= column.id %>">
+                                                    Add Task
+                                                </button>
+                                                <!-- Modal for creating a new task -->
+                                                <div class="modal fade" id="createTaskModal<%= column.id %>"
+                                                    tabindex="-1" aria-labelledby="createTaskModalLabel"
+                                                    aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="createTaskModalLabel">Create
+                                                                    Task</h5>
+                                                                <button type="button" class="btn-close"
+                                                                    data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <!-- Add a form to create a new task -->
+                                                                <form action="/new" method="POST">
+                                                                    <input type="hidden" name="UserId"
+                                                                        value="<%= currentUser.id %>">
+                                                                    <input type="hidden" name="ColumnId"
+                                                                        value="<%= column.id %>">
+                                                                    <div class="mb-3">
+                                                                        <label for="taskName" class="form-label">Task
+                                                                            Name</label>
+                                                                        <input type="text" class="form-control"
+                                                                            id="taskName" name="name" required>
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label for="taskDescription"
+                                                                            class="form-label">Task
+                                                                            Description</label>
+                                                                        <textarea class="form-control"
+                                                                            id="taskDescription" name="description"
+                                                                            required></textarea>
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label for="taskDate" class="form-label">Task
+                                                                            Date</label>
+                                                                        <input type="date" class="form-control"
+                                                                            id="taskDate" name="date" required>
+                                                                    </div>
+                                                                    <button type="submit" class="btn btn-primary">Create
+                                                                        Task</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <% }) %>
+
+                                <!-- Modal for creating a new column -->
+                                <div class="modal fade" id="createColumnModal" tabindex="-1"
+                                    aria-labelledby="createColumnModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="createColumnModalLabel">Create Column</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <!-- Add a form to create a new column -->
+                                                <form action="/index" method="POST">
+                                                    <div class="mb-3">
+                                                        <label for="columnName" class="form-label">Column Name</label>
+                                                        <input type="text" class="form-control" id="columnName"
+                                                            name="name" required>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-success">Create Column</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let draggedTaskId;
+
+        function handleTaskDragStart(event) {
+            draggedTaskId = event.target.dataset.taskId;
+            event.dataTransfer.setData("text/plain", draggedTaskId);
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            const targetColumnId = event.target.closest(".card-body").dataset.columnId;
+
+            // Update the task's ColumnId in the database
+            updateTaskColumnInDatabase(draggedTaskId, targetColumnId)
+                .then(() => {
+                    // Move the task to the new column in the UI
+                    const taskElement = document.querySelector(`[data-task-id="${draggedTaskId}"]`);
+                    event.target.closest(".card-body").appendChild(taskElement);
+
+                    // Refresh the page after the drop
+                    window.location.reload();
+                })
+                .catch(error => {
+                    console.error('Error updating task column:', error);
+                });
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+        }
+
+        function handleTaskClick(event) {
+            // Handle task click to start dragging
+            const taskId = event.target.dataset.taskId;
+            const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+            taskElement.draggable = true;
+        }
+
+        async function updateTaskColumnInDatabase(taskId, columnId) {
+            try {
+                const response = await fetch(`/updateTaskColumn/${taskId}/${columnId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to update task column in the database');
+                }
+
+                console.log('Task column updated successfully');
+            } catch (error) {
+                console.error('Error updating task column:', error);
+                throw error;
+            }
+        }
+    </script>

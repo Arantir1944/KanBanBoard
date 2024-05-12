@@ -1,0 +1,33 @@
+<!-- views/partials/navbar.ejs -->
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <!-- Logo -->
+        <a class="navbar-brand" href="/">
+            KanBanBoard
+        </a>
+
+        <!-- Navigation Links -->
+        <div class="navbar-nav me-auto">
+            <!-- Add the link to the /index route with the name "Your Board" -->
+            <a class="nav-link" href="/index">Your Board</a>
+        </div>
+
+        <!-- User Information and Links -->
+        <div class="d-flex">
+            <% if(currentUser) { %>
+                <!-- Display user's first name and last name -->
+                <span class="text-light me-2">
+                    <%= currentUser.FirstName %>
+                        <%= currentUser.LastName %>
+                </span>
+                <!-- Logout button -->
+                <a href="/logout" class="btn btn-outline-danger">Logout</a>
+                <% } else { %>
+                    <!-- Display login and register buttons if the user is not authenticated -->
+                    <a href="/login" class="btn btn-outline-primary me-2">Login</a>
+                    <a href="/register" class="btn btn-outline-success">Register</a>
+                    <% } %>
+        </div>
+    </div>
+</nav>
